@@ -43,30 +43,42 @@
         const { useState, useEffect, useRef } = React;
 
         // --- Question Database (Generated from PDFs) ---
-        // This acts as the "Database" for the AI randomization logic
+        // Expanded with more questions for better AI randomization
         const QUESTION_BANK = {
             mc: [
-                // Urinary
+                // Urinary System
                 { id: 'u1', topic: 'urinary', question: "哪一個器官負責過濾血液中的廢物和多餘水分？", options: ["心臟", "腎臟", "肝臟", "膀胱"], answer: 1, explanation: "解析：腎臟像過濾器，負責把血液中的廢物和多餘水分過濾出來，形成尿液。" },
                 { id: 'u2', topic: 'urinary', question: "尿液經輸尿管輸送到哪裡暫時儲存？", options: ["腎臟", "尿道", "膀胱", "胃"], answer: 2, explanation: "解析：膀胱負責暫時儲存尿液，直至有尿意排出。" },
                 { id: 'u3', topic: 'urinary', question: "以下哪項不是身體排出水分的途徑？", options: ["排汗", "呼氣", "排尿", "消化"], answer: 3, explanation: "解析：身體主要透過排汗、呼氣和排尿流失水分。" },
                 { id: 'u4', topic: 'urinary', question: "水是甚麼的主要成分，幫助運送養分？", options: ["骨骼", "血液", "肌肉", "頭髮"], answer: 1, explanation: "解析：水是血液的主要成分，負責運送養分和氧氣到身體各部分。" },
                 { id: 'u5', topic: 'urinary', question: "為了保護泌尿系統，我們應該避免甚麼？", options: ["多喝水", "多吃水果", "經常忍尿", "做運動"], answer: 2, explanation: "解析：經常忍尿會令廢物積聚，容易引致細菌感染。" },
-                // Nervous
+                { id: 'u6', topic: 'urinary', question: "腎臟的外形像甚麼？", options: ["腰果", "蠶豆", "氣球", "喉管"], answer: 1, explanation: "解析：腎臟位於腰部脊骨兩旁，形狀像蠶豆。" },
+                { id: 'u7', topic: 'urinary', question: "除了喝水，我們還可以透過甚麼補充水分？", options: ["吃薯片", "吃水果和蔬菜", "吃油炸食物", "睡覺"], answer: 1, explanation: "解析：水果和蔬菜含有豐富水分，有助補充身體所需。" },
+                { id: 'u8', topic: 'urinary', question: "如果腎臟功能受損，身體會出現甚麼問題？", options: ["無法過濾廢物", "無法呼吸", "無法思考", "無法行走"], answer: 0, explanation: "解析：腎臟受損會導致廢物和毒素積聚在血液中，危害健康。" },
+                
+                // Nervous System
                 { id: 'n1', topic: 'nervous', question: "神經系統的總司令是甚麼？", options: ["心臟", "腦", "脊髓", "神經"], answer: 1, explanation: "解析：腦是神經系統的中樞，負責思考、記憶和發出指令。" },
                 { id: 'n2', topic: 'nervous', question: "以下哪項屬於反射動作？", options: ["寫字", "彈琴", "縮手 (觸碰熱物)", "跑步"], answer: 2, explanation: "解析：縮手是為了保護身體的快速反應，不經大腦思考，由脊髓控制。" },
                 { id: 'n3', topic: 'nervous', question: "感覺神經的主要功能是甚麼？", options: ["發出指令", "接收訊息", "製造血液", "消化食物"], answer: 1, explanation: "解析：感覺神經負責接收外界刺激（如熱、痛）並傳送到中樞神經。" },
                 { id: 'n4', topic: 'nervous', question: "怎樣做可以讓大腦休息？", options: ["通宵打機", "充足睡眠", "喝咖啡", "劇烈運動"], answer: 1, explanation: "解析：充足的睡眠是讓大腦休息和整理記憶的最佳方法。" },
-                // Puberty Physio
+                { id: 'n5', topic: 'nervous', question: "腦部受到甚麼保護？", options: ["頭骨", "肋骨", "脊骨", "盆骨"], answer: 0, explanation: "解析：堅硬的頭骨包圍著腦部，提供保護。" },
+                { id: 'n6', topic: 'nervous', question: "酒精對神經系統有甚麼影響？", options: ["加快反應", "減慢反應", "增強記憶", "沒有影響"], answer: 1, explanation: "解析：酒精會麻醉腦部，令反應遲鈍，判斷力下降。" },
+                { id: 'n7', topic: 'nervous', question: "隨意動作（如做功課）主要由哪部分控制？", options: ["脊髓", "腦", "心臟", "胃"], answer: 1, explanation: "解析：隨意動作需要經過思考，由腦部發出指令。" },
+
+                // Puberty Physiological
                 { id: 'p1', topic: 'puberty', question: "青春期一般在甚麼年齡階段？", options: ["1-5歲", "6-10歲", "11-19歲", "20-30歲"], answer: 2, explanation: "解析：青春期是兒童過渡到成人的階段，約在11至19歲。" },
                 { id: 'p2', topic: 'puberty', question: "男性青春期時，睾丸開始製造甚麼？", options: ["卵子", "精子", "尿液", "血液"], answer: 1, explanation: "解析：精子是男性的生殖細胞，由睾丸製造。" },
                 { id: 'p3', topic: 'puberty', question: "女性月經週期大約是多少天？", options: ["7天", "14天", "28天", "60天"], answer: 2, explanation: "解析：月經週期平均約為28天，但因人而異。" },
                 { id: 'p4', topic: 'puberty', question: "以下哪項是影響發育的因素？", options: ["遺傳", "飲食", "運動", "以上皆是"], answer: 3, explanation: "解析：發育受先天遺傳及後天飲食、運動、睡眠等因素影響。" },
                 { id: 'p5', topic: 'puberty', question: "夢遺是甚麼？", options: ["病態", "不正常的", "自然的生理現象", "受傷表現"], answer: 2, explanation: "解析：夢遺是男性青春期常見的自然生理現象，表示生殖系統趨向成熟。" },
-                // Puberty Psych
+                { id: 'p6', topic: 'puberty', question: "長青春痘（暗瘡）主要是因為？", options: ["油脂分泌旺盛", "喝太多水", "讀書太勤力", "長得太高"], answer: 0, explanation: "解析：青春期荷爾蒙分泌增加，令油脂分泌旺盛，容易堵塞毛孔形成暗瘡。" },
+                { id: 'p7', topic: 'puberty', question: "男性聲音變低沉（喉核凸出）是因為甚麼發育？", options: ["肺部", "喉部", "口腔", "鼻子"], answer: 1, explanation: "解析：喉部軟骨發育變大，導致聲帶變長變厚，聲音因此變低沉。" },
+
+                // Puberty Psychological
                 { id: 'ps1', topic: 'puberty', question: "青春期青少年為什麼會模仿偶像？", options: ["尋求認同", "為了賺錢", "被強迫", "無聊"], answer: 0, explanation: "解析：青少年尋求自我形象和朋輩認同，容易模仿偶像或朋友。" },
                 { id: 'ps2', topic: 'puberty', question: "面對父母的囉嗦，青少年應該？", options: ["離家出走", "大發脾氣", "冷靜溝通", "充耳不聞"], answer: 2, explanation: "解析：良好的溝通能減少誤會，青少年應學習表達感受並體諒父母。" },
-                { id: 'ps3', topic: 'puberty', question: "與異性相處時，我們應該？", options: ["保持距離並互相尊重", "只和同性玩", "取笑對方", "完全不說話"], answer: 0, explanation: "解析：青春期對異性好奇是正常的，應以大方、尊重的態度相處。" }
+                { id: 'ps3', topic: 'puberty', question: "與異性相處時，我們應該？", options: ["保持距離並互相尊重", "只和同性玩", "取笑對方", "完全不說話"], answer: 0, explanation: "解析：青春期對異性好奇是正常的，應以大方、尊重的態度相處。" },
+                { id: 'ps4', topic: 'puberty', question: "當朋友邀請你嘗試吸煙時，你應該？", options: ["試一口", "堅決拒絕", "猶豫不決", "收下煙包"], answer: 1, explanation: "解析：吸煙危害健康，面對不良誘惑要堅決說「不」。" }
             ],
             fillBlank: [
                 { id: 'fb1', topic: 'urinary', question: "腎臟負責過濾血液，形成________。", options: ["汗水", "尿液", "口水"], answer: "尿液", explanation: "解析：腎臟的功能是過濾血液中的廢物，形成尿液。" },
@@ -74,7 +86,10 @@
                 { id: 'fb3', topic: 'nervous', question: "________負責傳遞訊息和控制反射動作。", options: ["心臟", "脊髓", "胃"], answer: "脊髓", explanation: "解析：脊髓是中樞神經的一部分，是反射動作的中樞。" },
                 { id: 'fb4', topic: 'puberty', question: "男性的陰莖和________是外生殖器官。", options: ["陰囊", "輸精管", "前列腺"], answer: "陰囊", explanation: "解析：陰囊包裹著睾丸，位於體外。" },
                 { id: 'fb5', topic: 'puberty', question: "________脫落會形成月經。", options: ["子宮內膜", "卵巢", "輸卵管"], answer: "子宮內膜", explanation: "解析：未受精的卵子令子宮內膜剝落，形成月經。" },
-                { id: 'fb6', topic: 'puberty', question: "青少年渴望________，不想事事依賴。", options: ["控制", "獨立", "依賴"], answer: "獨立", explanation: "解析：獨立自主是青春期心理發展的重要特徵。" }
+                { id: 'fb6', topic: 'puberty', question: "青少年渴望________，不想事事依賴。", options: ["控制", "獨立", "依賴"], answer: "獨立", explanation: "解析：獨立自主是青春期心理發展的重要特徵。" },
+                { id: 'fb7', topic: 'nervous', question: "________位於頭顱內，受頭骨保護。", options: ["腦", "心臟", "脊髓"], answer: "腦", explanation: "解析：腦是非常重要的器官，受堅硬的頭骨保護。" },
+                { id: 'fb8', topic: 'urinary', question: "尿液經________排出體外。", options: ["輸尿管", "尿道", "大腸"], answer: "尿道", explanation: "解析：尿道是尿液離開身體的最後通道。" },
+                { id: 'fb9', topic: 'puberty', question: "青春期汗腺分泌旺盛，容易產生________。", options: ["體香", "體臭", "口氣"], answer: "體臭", explanation: "解析：汗液與細菌作用會產生體臭，應注意清潔。" }
             ],
             matching: [
                 {
@@ -91,6 +106,11 @@
                     id: 'm3', topic: 'puberty', questionText: "男女生殖器官",
                     pairs: [ { left: "睾丸", right: "製造精子" }, { left: "卵巢", right: "排出卵子" }, { left: "子宮", right: "胎兒發育" }, { left: "陰囊", right: "保護睾丸" } ],
                     explanation: "解析：男生有睾丸陰囊；女生有卵巢子宮。"
+                },
+                {
+                    id: 'm4', topic: 'puberty', questionText: "青春期衞生護理",
+                    pairs: [ { left: "長青春痘", right: "早晚潔面" }, { left: "有體臭", right: "每天洗澡" }, { left: "月經來潮", right: "更換衞生巾" }, { left: "頭髮油膩", right: "勤洗頭" } ],
+                    explanation: "解析：青春期油脂和汗腺分泌旺盛，保持個人衞生十分重要。"
                 }
             ],
             short: [
@@ -98,7 +118,9 @@
                 { id: 's2', topic: 'urinary', question: "為甚麼不應忍尿？", answer: "避免細菌感染及損害膀胱。", explanation: "解析：尿液含廢物，積聚太久會滋生細菌。" },
                 { id: 's3', topic: 'puberty', question: "遇到朋輩壓力（如吸煙）應怎樣做？", answer: "堅決拒絕，並勸告朋友。", explanation: "解析：學會說「不」是成長的重要一課。" },
                 { id: 's4', topic: 'puberty', question: "列出兩項青春期男性的生理特徵。", answer: "長出鬍鬚、喉核凸出、聲線變低沉。", explanation: "解析：這是男性荷爾蒙導致的第二性徵。" },
-                { id: 's5', topic: 'urinary', question: "水對身體有甚麼功用？(列舉兩項)", answer: "調節體溫、運送養分、排泄廢物。", explanation: "解析：水是生命之源，參與身體多種代謝功能。" }
+                { id: 's5', topic: 'urinary', question: "水對身體有甚麼功用？(列舉兩項)", answer: "調節體溫、運送養分、排泄廢物。", explanation: "解析：水是生命之源，參與身體多種代謝功能。" },
+                { id: 's6', topic: 'puberty', question: "處理青春痘時，有甚麼注意事項？", answer: "保持面部清潔，不要用手擠壓。", explanation: "解析：擠壓暗瘡容易造成發炎和留疤。" },
+                { id: 's7', topic: 'nervous', question: "除了腦，中樞神經系統還包括甚麼？", answer: "脊髓", explanation: "解析：中樞神經系統由腦和脊髓組成。" }
             ]
         };
 
@@ -422,6 +444,7 @@
                     let totalMarks = 0;
 
                     // Logic: Get ALL questions for the type, then SHUFFLE and SLICE
+                    // This randomized selection IS the "AI Generation" simulation
                     const typesToProcess = typeMode === 'all' ? startOrder : [typeMode];
 
                     typesToProcess.forEach(type => {
