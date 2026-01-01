@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常識科温習挑戰賽 (General Studies Revision)</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Noto Sans HK', sans-serif; background-color: #f0f9ff; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Device Frames */
+        .device-mobile { max-width: 375px; margin: 0 auto; border-left: 8px solid #333; border-right: 8px solid #333; border-top: 10px solid #333; border-bottom: 10px solid #333; border-radius: 20px; height: 90vh; overflow-y: auto; background: #fff; }
+        .device-tablet { max-width: 768px; margin: 0 auto; border-left: 12px solid #333; border-right: 12px solid #333; border-top: 12px solid #333; border-bottom: 12px solid #333; border-radius: 24px; height: 90vh; overflow-y: auto; background: #fff; }
+        .device-computer { max-width: 1024px; margin: 0 auto; width: 100%; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        
+        .bounce-short { animation: bounce 1s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(-5%); } 50% { transform: translateY(0); } }
+
+        .draw-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: dash 0.5s linear forwards; }
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+
+        /* Loading Pulse */
+        .ai-pulse { animation: pulse-blue 2s infinite; }
+        @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Question Database (Generated from PDFs) ---
+        // This acts as the "Database" for the AI randomization logic
+        const QUESTION_BANK = {
+            mc: [
+                // Urinary
+                { id: 'u1', topic: 'urinary', question: "哪一個器官負責過濾血液中的廢物和多餘水分？", options: ["心臟", "腎臟", "肝臟", "膀胱"], answer: 1, explanation: "解析：腎臟像過濾器，負責把血液中的廢物和多餘水分過濾出來，形成尿液。" },
+                { id: 'u2', topic: 'urinary', question: "尿液經輸尿管輸送到哪裡暫時儲存？", options: ["腎臟", "尿道", "膀胱", "胃"], answer: 2, explanation: "解析：膀胱負責暫時儲存尿液，直至有尿意排出。" },
+                { id: 'u3', topic: 'urinary', question: "以下哪項不是身體排出水分的途徑？", options: ["排汗", "呼氣", "排尿", "消化"], answer: 3, explanation: "解析：身體主要透過排汗、呼氣和排尿流失水分。" },
+                { id: 'u4', topic: 'urinary', question: "水是甚麼的主要成分，幫助運送養分？", options: ["骨骼", "血液", "肌肉", "頭髮"], answer: 1, explanation: "解析：水是血液的主要成分，負責運送養分和氧氣到身體各部分。" },
+                { id: 'u5', topic: 'urinary', question: "為了保護泌尿系統，我們應該避免甚麼？", options: ["多喝水", "多吃水果", "經常忍尿", "做運動"], answer: 2, explanation: "解析：經常忍尿會令廢物積聚，容易引致細菌感染。" },
+                // Nervous
+                { id: 'n1', topic: 'nervous', question: "神經系統的總司令是甚麼？", options: ["心臟", "腦", "脊髓", "神經"], answer: 1, explanation: "解析：腦是神經系統的中樞，負責思考、記憶和發出指令。" },
+                { id: 'n2', topic: 'nervous', question: "以下哪項屬於反射動作？", options: ["寫字", "彈琴", "縮手 (觸碰熱物)", "跑步"], answer: 2, explanation: "解析：縮手是為了保護身體的快速反應，不經大腦思考，由脊髓控制。" },
+                { id: 'n3', topic: 'nervous', question: "感覺神經的主要功能是甚麼？", options: ["發出指令", "接收訊息", "製造血液", "消化食物"], answer: 1, explanation: "解析：感覺神經負責接收外界刺激（如熱、痛）並傳送到中樞神經。" },
+                { id: 'n4', topic: 'nervous', question: "怎樣做可以讓大腦休息？", options: ["通宵打機", "充足睡眠", "喝咖啡", "劇烈運動"], answer: 1, explanation: "解析：充足的睡眠是讓大腦休息和整理記憶的最佳方法。" },
+                // Puberty Physio
+                { id: 'p1', topic: 'puberty', question: "青春期一般在甚麼年齡階段？", options: ["1-5歲", "6-10歲", "11-19歲", "20-30歲"], answer: 2, explanation: "解析：青春期是兒童過渡到成人的階段，約在11至19歲。" },
+                { id: 'p2', topic: 'puberty', question: "男性青春期時，睾丸開始製造甚麼？", options: ["卵子", "精子", "尿液", "血液"], answer: 1, explanation: "解析：精子是男性的生殖細胞，由睾丸製造。" },
+                { id: 'p3', topic: 'puberty', question: "女性月經週期大約是多少天？", options: ["7天", "14天", "28天", "60天"], answer: 2, explanation: "解析：月經週期平均約為28天，但因人而異。" },
+                { id: 'p4', topic: 'puberty', question: "以下哪項是影響發育的因素？", options: ["遺傳", "飲食", "運動", "以上皆是"], answer: 3, explanation: "解析：發育受先天遺傳及後天飲食、運動、睡眠等因素影響。" },
+                { id: 'p5', topic: 'puberty', question: "夢遺是甚麼？", options: ["病態", "不正常的", "自然的生理現象", "受傷表現"], answer: 2, explanation: "解析：夢遺是男性青春期常見的自然生理現象，表示生殖系統趨向成熟。" },
+                // Puberty Psych
+                { id: 'ps1', topic: 'puberty', question: "青春期青少年為什麼會模仿偶像？", options: ["尋求認同", "為了賺錢", "被強迫", "無聊"], answer: 0, explanation: "解析：青少年尋求自我形象和朋輩認同，容易模仿偶像或朋友。" },
+                { id: 'ps2', topic: 'puberty', question: "面對父母的囉嗦，青少年應該？", options: ["離家出走", "大發脾氣", "冷靜溝通", "充耳不聞"], answer: 2, explanation: "解析：良好的溝通能減少誤會，青少年應學習表達感受並體諒父母。" },
+                { id: 'ps3', topic: 'puberty', question: "與異性相處時，我們應該？", options: ["保持距離並互相尊重", "只和同性玩", "取笑對方", "完全不說話"], answer: 0, explanation: "解析：青春期對異性好奇是正常的，應以大方、尊重的態度相處。" }
+            ],
+            fillBlank: [
+                { id: 'fb1', topic: 'urinary', question: "腎臟負責過濾血液，形成________。", options: ["汗水", "尿液", "口水"], answer: "尿液", explanation: "解析：腎臟的功能是過濾血液中的廢物，形成尿液。" },
+                { id: 'fb2', topic: 'urinary', question: "我們應每天喝________杯水。", options: ["1-2", "6-8", "20"], answer: "6-8", explanation: "解析：每天6-8杯水足夠補充流失的水分。" },
+                { id: 'fb3', topic: 'nervous', question: "________負責傳遞訊息和控制反射動作。", options: ["心臟", "脊髓", "胃"], answer: "脊髓", explanation: "解析：脊髓是中樞神經的一部分，是反射動作的中樞。" },
+                { id: 'fb4', topic: 'puberty', question: "男性的陰莖和________是外生殖器官。", options: ["陰囊", "輸精管", "前列腺"], answer: "陰囊", explanation: "解析：陰囊包裹著睾丸，位於體外。" },
+                { id: 'fb5', topic: 'puberty', question: "________脫落會形成月經。", options: ["子宮內膜", "卵巢", "輸卵管"], answer: "子宮內膜", explanation: "解析：未受精的卵子令子宮內膜剝落，形成月經。" },
+                { id: 'fb6', topic: 'puberty', question: "青少年渴望________，不想事事依賴。", options: ["控制", "獨立", "依賴"], answer: "獨立", explanation: "解析：獨立自主是青春期心理發展的重要特徵。" }
+            ],
+            matching: [
+                {
+                    id: 'm1', topic: 'nervous', questionText: "神經系統功能配對",
+                    pairs: [ { left: "腦", right: "發出指令" }, { left: "脊髓", right: "反射中樞" }, { left: "感覺神經", right: "接收訊息" }, { left: "運動神經", right: "傳送指令" } ],
+                    explanation: "解析：腦思考；脊髓反射；感覺神經入；運動神經出。"
+                },
+                {
+                    id: 'm2', topic: 'urinary', questionText: "泌尿系統路徑",
+                    pairs: [ { left: "腎臟", right: "製造尿液" }, { left: "輸尿管", right: "輸送尿液" }, { left: "膀胱", right: "儲存尿液" }, { left: "尿道", right: "排出尿液" } ],
+                    explanation: "解析：尿液路徑：腎 -> 輸尿管 -> 膀胱 -> 尿道。"
+                },
+                {
+                    id: 'm3', topic: 'puberty', questionText: "男女生殖器官",
+                    pairs: [ { left: "睾丸", right: "製造精子" }, { left: "卵巢", right: "排出卵子" }, { left: "子宮", right: "胎兒發育" }, { left: "陰囊", right: "保護睾丸" } ],
+                    explanation: "解析：男生有睾丸陰囊；女生有卵巢子宮。"
+                }
+            ],
+            short: [
+                { id: 's1', topic: 'nervous', question: "列出兩個保護神經系統的方法。", answer: "1. 充足睡眠\n2. 遠離毒品/酒精", explanation: "解析：休息和遠離有害物質對腦部發育至關重要。" },
+                { id: 's2', topic: 'urinary', question: "為甚麼不應忍尿？", answer: "避免細菌感染及損害膀胱。", explanation: "解析：尿液含廢物，積聚太久會滋生細菌。" },
+                { id: 's3', topic: 'puberty', question: "遇到朋輩壓力（如吸煙）應怎樣做？", answer: "堅決拒絕，並勸告朋友。", explanation: "解析：學會說「不」是成長的重要一課。" },
+                { id: 's4', topic: 'puberty', question: "列出兩項青春期男性的生理特徵。", answer: "長出鬍鬚、喉核凸出、聲線變低沉。", explanation: "解析：這是男性荷爾蒙導致的第二性徵。" },
+                { id: 's5', topic: 'urinary', question: "水對身體有甚麼功用？(列舉兩項)", answer: "調節體溫、運送養分、排泄廢物。", explanation: "解析：水是生命之源，參與身體多種代謝功能。" }
+            ]
+        };
+
+        // --- Helper: Shuffle Algorithm ---
+        function shuffleArray(array) {
+            const newArr = [...array];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        }
+
+        // --- Components ---
+
+        function DeviceControls({ mode, setMode }) {
+            return (
+                <div className="fixed top-4 right-4 z-50 bg-white p-2 rounded-lg shadow-lg flex gap-2 border border-gray-200">
+                    <button onClick={() => setMode('mobile')} className={`p-2 rounded flex flex-col items-center justify-center w-16 transition-colors ${mode === 'mobile' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}><i className="fa-solid fa-mobile-screen text-xl mb-1"></i><span className="text-[10px]">Mobile</span></button>
+                    <button onClick={() => setMode('tablet')} className={`p-2 rounded flex flex-col items-center justify-center w-16 transition-colors ${mode === 'tablet' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}><i className="fa-solid fa-tablet-screen-button text-xl mb-1"></i><span className="text-[10px]">Tablet</span></button>
+                    <button onClick={() => setMode('computer')} className={`p-2 rounded flex flex-col items-center justify-center w-16 transition-colors ${mode === 'computer' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}><i className="fa-solid fa-desktop text-xl mb-1"></i><span className="text-[10px]">Computer</span></button>
+                </div>
+            );
+        }
+
+        function HomeButton({ onHome }) {
+            return (
+                <button onClick={onHome} className="fixed top-4 left-4 z-50 bg-white p-3 rounded-full shadow-lg border border-gray-200 text-blue-600 hover:bg-blue-50 hover:scale-110 transition-all" title="Home">
+                    <i className="fa-solid fa-house text-xl"></i>
+                </button>
+            );
+        }
+
+        function LoadingScreen() {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-[500px] fade-in">
+                    <div className="text-6xl text-blue-500 mb-6 ai-pulse rounded-full p-4">
+                        <i className="fa-solid fa-robot"></i>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">AI 正在生成題目...</h2>
+                    <p className="text-gray-500">Generating Unique Quiz from Database...</p>
+                </div>
+            );
+        }
+
+        function StartScreen({ onStart }) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-full p-8 text-center fade-in">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border-b-4 border-blue-500">
+                        <div className="mb-6 text-blue-600 text-6xl"><i className="fa-solid fa-graduation-cap"></i></div>
+                        <h1 className="text-3xl font-bold text-gray-800 mb-4">常識科温習挑戰賽<br/><span className="text-xl text-gray-600">Primary GS Revision Challenge</span></h1>
+                        <p className="text-gray-600 mb-8 text-lg">請選擇温習課題 (Please select a topic):</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                             <button onClick={() => onStart('all')} className="col-span-1 md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-md flex items-center justify-center gap-3"><i className="fa-solid fa-layer-group"></i> 綜合挑戰 (Mixed / All Topics)</button>
+                            <button onClick={() => onStart('nervous')} className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-md flex items-center justify-center gap-3"><i className="fa-solid fa-brain"></i> 神經系統 (Nervous System)</button>
+                            <button onClick={() => onStart('urinary')} className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-md flex items-center justify-center gap-3"><i className="fa-solid fa-droplet"></i> 泌尿系統 (Urinary System)</button>
+                            <button onClick={() => onStart('puberty')} className="col-span-1 md:col-span-2 bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-md flex items-center justify-center gap-3"><i className="fa-solid fa-user-group"></i> 青春期變化 (Puberty)</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function TypeSelectionScreen({ questionCounts, onSelectType, onBack }) {
+            const hasQuestions = (count) => count > 0;
+            return (
+                 <div className="flex flex-col items-center justify-center min-h-full p-8 text-center fade-in">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl border-b-4 border-indigo-500 relative">
+                        <button onClick={onBack} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600"><i className="fa-solid fa-arrow-left text-xl"></i></button>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2 mt-2">選擇題目類型<br/><span className="text-lg text-gray-500">Select Question Type</span></h2>
+                        <div className="grid gap-4 mt-6">
+                            <button onClick={() => onSelectType('all')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-md flex justify-between items-center group">
+                                <span className="flex items-center gap-3"><i className="fa-solid fa-shuffle"></i> 綜合題型 (All Types)</span>
+                                <span className="bg-indigo-800 text-xs py-1 px-3 rounded-full text-indigo-100">AI Generated</span>
+                            </button>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <button onClick={() => onSelectType('mc')} disabled={!hasQuestions(questionCounts.mc)} className={`font-bold py-4 px-6 rounded-xl text-left shadow-sm border-2 transition-all flex flex-col justify-between h-24 ${hasQuestions(questionCounts.mc) ? 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100' : 'bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-60'}`}>
+                                    <span className="text-lg"><i className="fa-solid fa-list-check mr-2"></i>選擇題 (MC)</span>
+                                    <span className="text-sm opacity-70 text-right">{questionCounts.mc} Available</span>
+                                </button>
+                                <button onClick={() => onSelectType('fillBlank')} disabled={!hasQuestions(questionCounts.fillBlank)} className={`font-bold py-4 px-6 rounded-xl text-left shadow-sm border-2 transition-all flex flex-col justify-between h-24 ${hasQuestions(questionCounts.fillBlank) ? 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100' : 'bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-60'}`}>
+                                    <span className="text-lg"><i className="fa-solid fa-pen-to-square mr-2"></i>填充題 (Fill)</span>
+                                    <span className="text-sm opacity-70 text-right">{questionCounts.fillBlank} Available</span>
+                                </button>
+                                <button onClick={() => onSelectType('matching')} disabled={!hasQuestions(questionCounts.matching)} className={`font-bold py-4 px-6 rounded-xl text-left shadow-sm border-2 transition-all flex flex-col justify-between h-24 ${hasQuestions(questionCounts.matching) ? 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100' : 'bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-60'}`}>
+                                    <span className="text-lg"><i className="fa-solid fa-link mr-2"></i>配對題 (Match)</span>
+                                    <span className="text-sm opacity-70 text-right">{questionCounts.matching} Sets</span>
+                                </button>
+                                <button onClick={() => onSelectType('short')} disabled={!hasQuestions(questionCounts.short)} className={`font-bold py-4 px-6 rounded-xl text-left shadow-sm border-2 transition-all flex flex-col justify-between h-24 ${hasQuestions(questionCounts.short) ? 'bg-orange-50 border-orange-200 text-orange-800 hover:bg-orange-100' : 'bg-gray-50 border-gray-100 text-gray-400 cursor-not-allowed opacity-60'}`}>
+                                    <span className="text-lg"><i className="fa-solid fa-comment-dots mr-2"></i>短答題 (Short)</span>
+                                    <span className="text-sm opacity-70 text-right">{questionCounts.short} Available</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Question Components (MC, Fill, Match, Short) ---
+        function ExplanationBox({ isCorrect, explanation }) {
+            return (
+                <div className={`mt-4 p-4 rounded-lg border-l-4 fade-in ${isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
+                    <div className={`font-bold mb-1 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>{isCorrect ? <><i className="fa-solid fa-check-circle mr-2"></i>答對了! (Correct!)</> : <><i className="fa-solid fa-times-circle mr-2"></i>答錯了 (Incorrect)</>}</div>
+                    <div className="text-gray-700 text-sm md:text-base leading-relaxed whitespace-pre-line">{explanation}</div>
+                </div>
+            );
+        }
+
+        function QuestionNavigation({ onNext, onBack, canBack, showNext }) {
+            return (
+                <div className="flex gap-3 mt-6">
+                    <button onClick={onBack} disabled={!canBack} className={`flex-1 py-3 px-4 rounded-lg font-bold shadow-sm transition-all flex items-center justify-center ${canBack ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'}`}><i className="fa-solid fa-arrow-left mr-2"></i> 上一題 (Back)</button>
+                    {showNext && <button onClick={() => onNext()} className="flex-[2] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md bounce-short flex items-center justify-center">下一題 (Next) <i className="fa-solid fa-arrow-right ml-2"></i></button>}
+                </div>
+            );
+        }
+
+        function MCSection({ questionData, onNext, onBack, canBack }) {
+            const [selectedIdx, setSelectedIdx] = useState(null);
+            const [isConfirmed, setIsConfirmed] = useState(false);
+            useEffect(() => { setSelectedIdx(null); setIsConfirmed(false); }, [questionData]);
+            const handleSelect = (idx) => { if (isConfirmed) return; setSelectedIdx(idx); setIsConfirmed(true); };
+            const isCorrect = selectedIdx === questionData.answer;
+
+            return (
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 fade-in">
+                    <h3 className="text-xl font-bold text-gray-800 mb-6 leading-relaxed"><span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded align-middle">選擇題 (MC)</span>{questionData.question}</h3>
+                    <div className="grid gap-3">
+                        {questionData.options.map((opt, idx) => {
+                            let btnClass = "w-full text-left p-4 rounded-lg border-2 transition-all font-medium ";
+                            if (isConfirmed) {
+                                if (idx === questionData.answer) btnClass += "bg-green-100 border-green-500 text-green-900";
+                                else if (idx === selectedIdx) btnClass += "bg-red-100 border-red-500 text-red-900";
+                                else btnClass += "border-gray-200 text-gray-400 opacity-60";
+                            } else btnClass += "border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700";
+                            return <button key={idx} onClick={() => handleSelect(idx)} disabled={isConfirmed} className={btnClass}><span className="inline-block w-8 font-bold opacity-50">{String.fromCharCode(65+idx)}.</span>{opt}</button>;
+                        })}
+                    </div>
+                    {isConfirmed && <ExplanationBox isCorrect={isCorrect} explanation={questionData.explanation} />}
+                    <QuestionNavigation onNext={() => onNext(isCorrect)} onBack={onBack} canBack={canBack} showNext={isConfirmed} />
+                </div>
+            );
+        }
+
+        function FillBlankSection({ questionData, onNext, onBack, canBack }) {
+            const [selectedOpt, setSelectedOpt] = useState(null);
+            useEffect(() => { setSelectedOpt(null); }, [questionData]);
+            const handleSelect = (opt) => { if (selectedOpt) return; setSelectedOpt(opt); };
+            const isCorrect = selectedOpt === questionData.answer;
+
+            return (
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 fade-in">
+                    <h3 className="text-xl font-bold text-gray-800 mb-6 leading-relaxed"><span className="bg-green-100 text-green-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded align-middle">填充題 (Fill In)</span>{questionData.question.replace("________", " ______ ")}</h3>
+                    <div className="flex flex-wrap gap-3 justify-center mb-4">
+                        {questionData.options.map((opt, idx) => {
+                             let btnClass = "px-6 py-3 rounded-full border-2 font-bold transition-all shadow-sm ";
+                             if (selectedOpt) {
+                                if (opt === questionData.answer) btnClass += "bg-green-500 text-white border-green-600";
+                                else if (opt === selectedOpt) btnClass += "bg-red-500 text-white border-red-600";
+                                else btnClass += "bg-gray-100 text-gray-400 border-gray-200";
+                             } else btnClass += "bg-green-50 border-green-200 text-green-800 hover:bg-green-100 hover:border-green-400";
+                             return <button key={idx} onClick={() => handleSelect(opt)} disabled={!!selectedOpt} className={btnClass}>{opt}</button>
+                        })}
+                    </div>
+                    {selectedOpt && <ExplanationBox isCorrect={isCorrect} explanation={questionData.explanation} />}
+                    <QuestionNavigation onNext={() => onNext(isCorrect)} onBack={onBack} canBack={canBack} showNext={!!selectedOpt} />
+                </div>
+            );
+        }
+
+        function MatchingSection({ questionData, onNext, onBack, canBack }) {
+            const [leftItems, setLeftItems] = useState([]);
+            const [rightItems, setRightItems] = useState([]);
+            const [selectedLeft, setSelectedLeft] = useState(null);
+            const [matchedPairs, setMatchedPairs] = useState([]); 
+            const [lines, setLines] = useState([]);
+            const [isFinished, setIsFinished] = useState(false);
+            const containerRef = useRef(null);
+            const buttonRefs = useRef({});
+
+            useEffect(() => {
+                const lefts = questionData.pairs.map((p, i) => ({ id: i, text: p.left }));
+                const rights = questionData.pairs.map((p, i) => ({ id: i, text: p.right })).sort(() => Math.random() - 0.5);
+                setLeftItems(lefts); setRightItems(rights); setMatchedPairs([]); setLines([]); setIsFinished(false); setSelectedLeft(null);
+            }, [questionData]);
+
+            useEffect(() => {
+                 const calculateLines = () => {
+                    if (!matchedPairs.length) return;
+                    const newLines = matchedPairs.map(pairId => {
+                        const leftEl = buttonRefs.current[`left-${pairId}`];
+                        const rightObj = rightItems.find(r => r.id === pairId); 
+                        const rightEl = buttonRefs.current[`right-${pairId}`];
+                        if (leftEl && rightEl && containerRef.current) {
+                            const containerRect = containerRef.current.getBoundingClientRect();
+                            const lRect = leftEl.getBoundingClientRect();
+                            const rRect = rightEl.getBoundingClientRect();
+                            return { x1: (lRect.right - containerRect.left), y1: (lRect.top + lRect.height/2 - containerRect.top), x2: (rRect.left - containerRect.left), y2: (rRect.top + rRect.height/2 - containerRect.top) };
+                        }
+                        return null;
+                    }).filter(Boolean);
+                    setLines(newLines);
+                };
+                const observer = new ResizeObserver(calculateLines);
+                if (containerRef.current) observer.observe(containerRef.current);
+                setTimeout(calculateLines, 100);
+                return () => observer.disconnect();
+            }, [matchedPairs, rightItems]);
+
+            const handleLeftClick = (id) => { if (matchedPairs.includes(id) || isFinished) return; setSelectedLeft(id); };
+            const handleRightClick = (rightId) => {
+                if (selectedLeft === null || isFinished) return;
+                if (selectedLeft === rightId) {
+                    const newMatched = [...matchedPairs, selectedLeft];
+                    setMatchedPairs(newMatched); setSelectedLeft(null);
+                    if (newMatched.length === questionData.pairs.length) setIsFinished(true);
+                } else setSelectedLeft(null);
+            };
+
+            return (
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 fade-in relative" ref={containerRef}>
+                     <h3 className="text-xl font-bold text-gray-800 mb-6"><span className="bg-purple-100 text-purple-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">配對題 (Matching)</span>{questionData.questionText || "請配對 (Match Items)"}</h3>
+                    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-10">{lines.map((line, i) => (<line key={i} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} stroke="#22c55e" strokeWidth="3" className="draw-line" />))}</svg>
+                    <div className="grid grid-cols-2 gap-4 md:gap-12 relative z-20">
+                        <div className="flex flex-col gap-4">{leftItems.map((item) => (<button key={item.id} ref={el => buttonRefs.current[`left-${item.id}`] = el} onClick={() => handleLeftClick(item.id)} className={`p-3 md:p-4 rounded-lg border-2 text-left font-medium text-sm md:text-base transition-all ${matchedPairs.includes(item.id) ? 'matched' : ''} ${selectedLeft === item.id ? 'selected-match' : 'border-gray-200 hover:border-blue-300'}`}>{item.text}</button>))}</div>
+                        <div className="flex flex-col gap-4">{rightItems.map((item) => (<button key={item.id} ref={el => buttonRefs.current[`right-${item.id}`] = el} onClick={() => handleRightClick(item.id)} className={`p-3 md:p-4 rounded-lg border-2 text-left font-medium text-sm md:text-base transition-all ${matchedPairs.includes(item.id) ? 'matched' : ''} ${matchedPairs.includes(item.id) ? '' : 'border-gray-200 hover:border-blue-300'}`}>{item.text}</button>))}</div>
+                    </div>
+                    {isFinished && <div className="mt-6 relative z-20"><div className="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500"><h4 className="font-bold text-purple-800 mb-2">完成！(Completed!)</h4><p className="text-gray-700 whitespace-pre-line text-sm">{questionData.explanation}</p></div></div>}
+                    <div className="relative z-20"><QuestionNavigation onNext={() => onNext(matchedPairs.length)} onBack={onBack} canBack={canBack} showNext={isFinished} /></div>
+                </div>
+            );
+        }
+
+        function ShortAnswerSection({ questionData, onNext, onBack, canBack }) {
+            const [showAnswer, setShowAnswer] = useState(false);
+            const [userAnswer, setUserAnswer] = useState("");
+            useEffect(() => { setShowAnswer(false); setUserAnswer(""); }, [questionData]);
+
+            return (
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 fade-in">
+                    <h3 className="text-xl font-bold text-gray-800 mb-6"><span className="bg-orange-100 text-orange-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">短答題 (Short Q)</span>{questionData.question}</h3>
+                    {!showAnswer ? (
+                        <div className="flex flex-col gap-4">
+                            <textarea value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)} className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-orange-400 transition-colors" rows="3" placeholder="在此輸入你的答案 (Type your answer here)..."></textarea>
+                            <button onClick={() => setShowAnswer(true)} className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition-colors">顯示參考答案與解析 (Show Answer & Explanation)</button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-4 fade-in">
+                             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200"><p className="text-gray-500 text-sm mb-1">你的答案 (Your Answer):</p><p className="text-gray-800 mb-3 font-medium">{userAnswer || "(未輸入 No Answer)"}</p></div>
+                            <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400"><p className="font-bold text-orange-800 mb-2">參考答案 (Model Answer):</p><p className="text-gray-800 whitespace-pre-line mb-3">{questionData.answer}</p><div className="border-t border-orange-200 pt-2 mt-2"><p className="font-bold text-orange-800 mb-1 text-sm">解析 (Explanation):</p><p className="text-gray-700 text-sm">{questionData.explanation}</p></div></div>
+                            <div className="text-center mt-2"><p className="mb-3 text-gray-600 font-medium">請自行評分 (Self Assessment):</p><div className="flex gap-4 justify-center"><button onClick={() => onNext(true)} className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-bold flex-1"><i className="fa-solid fa-check mr-2"></i>正確 (Correct)</button><button onClick={() => onNext(false)} className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-bold flex-1"><i className="fa-solid fa-xmark mr-2"></i>不正確 (Incorrect)</button></div></div>
+                        </div>
+                    )}
+                    {!showAnswer && <QuestionNavigation onNext={() => {}} onBack={onBack} canBack={canBack} showNext={false} />}
+                </div>
+            );
+        }
+
+        function ResultScreen({ scoreData, totalQuestions, onRetry }) {
+            const totalScore = scoreData.mc + scoreData.fillBlank + scoreData.matching + scoreData.short;
+            const percentage = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
+            let feedback = "", colorClass = "";
+            if(percentage >= 90) { feedback = "太棒了！ (Excellent!)"; colorClass = "text-green-600"; }
+            else if(percentage >= 70) { feedback = "做得好！ (Good Job!)"; colorClass = "text-blue-600"; }
+            else if(percentage >= 50) { feedback = "繼續努力！ (Keep Trying!)"; colorClass = "text-orange-600"; }
+            else { feedback = "請多溫習！ (Revise More!)"; colorClass = "text-red-600"; }
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-full p-4 fade-in">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl w-full border-t-8 border-blue-500">
+                        <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">成績表 (Results)</h2>
+                        <div className={`text-5xl font-extrabold text-center mb-6 ${colorClass} py-4`}>{totalScore} / {totalQuestions} <span className="text-xl text-gray-400 block mt-2 text-base">marks</span></div>
+                        <p className={`text-center text-xl font-bold mb-8 ${colorClass}`}>{feedback}</p>
+                        <div className="space-y-3 mb-8">
+                             <div className="flex justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><span className="text-gray-600">選擇題 (MC)</span><span className="font-bold text-gray-800">{scoreData.mc}</span></div>
+                            <div className="flex justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><span className="text-gray-600">填充題 (Fill In)</span><span className="font-bold text-gray-800">{scoreData.fillBlank}</span></div>
+                            <div className="flex justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><span className="text-gray-600">配對題 (Matching)</span><span className="font-bold text-gray-800">{scoreData.matching}</span></div>
+                            <div className="flex justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"><span className="text-gray-600">短答題 (Short Q)</span><span className="font-bold text-gray-800">{scoreData.short}</span></div>
+                        </div>
+                        <button onClick={onRetry} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg transition-colors shadow-lg">返回主目錄 (Main Menu)</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main Game Logic ---
+        function Game() {
+            const [gameState, setGameState] = useState('start'); 
+            const [currentType, setCurrentType] = useState('mc'); 
+            const [qIndex, setQIndex] = useState(0);
+            const [userAnswers, setUserAnswers] = useState({});
+            const [deviceMode, setDeviceMode] = useState('computer');
+            
+            // "Database" of all potential questions
+            const [topicQuestions, setTopicQuestions] = useState(QUESTION_BANK);
+            // "Active" questions for the current session (Random subset)
+            const [activeQuestions, setActiveQuestions] = useState(QUESTION_BANK); 
+            const [totalPossibleMarks, setTotalPossibleMarks] = useState(0);
+
+            const startOrder = ['mc', 'fillBlank', 'matching', 'short'];
+            const MAX_QUESTIONS_PER_TYPE = 5; // AI Limit: Don't show all questions at once, pick 5 random ones
+
+            const handleTopicSelect = (topic) => {
+                // Filter full database by topic first
+                const filtered = { mc: [], fillBlank: [], matching: [], short: [] };
+                Object.keys(QUESTION_BANK).forEach(type => {
+                    filtered[type] = QUESTION_BANK[type].filter(q => topic === 'all' || q.topic === topic);
+                });
+                setTopicQuestions(filtered);
+                setUserAnswers({});
+                setGameState('typeSelect');
+            };
+
+            const handleTypeSelect = (typeMode) => {
+                // Show AI generation screen
+                setGameState('loading');
+
+                setTimeout(() => {
+                    let generatedQuestions = { mc: [], fillBlank: [], matching: [], short: [] };
+                    let totalMarks = 0;
+
+                    // Logic: Get ALL questions for the type, then SHUFFLE and SLICE
+                    const typesToProcess = typeMode === 'all' ? startOrder : [typeMode];
+
+                    typesToProcess.forEach(type => {
+                        // 1. Get all candidates
+                        const candidates = topicQuestions[type];
+                        // 2. Shuffle (AI Generation)
+                        const shuffled = shuffleArray(candidates);
+                        // 3. Slice (Pick top 5 or so)
+                        const selected = shuffled.slice(0, MAX_QUESTIONS_PER_TYPE);
+                        
+                        generatedQuestions[type] = selected;
+
+                        // Calculate marks
+                        if (type === 'matching') {
+                            selected.forEach(q => totalMarks += q.pairs.length);
+                        } else {
+                            totalMarks += selected.length;
+                        }
+                    });
+
+                    setActiveQuestions(generatedQuestions);
+                    setTotalPossibleMarks(totalMarks);
+
+                    // Find first available section
+                    let startType = 'mc';
+                    let startIdx = 0;
+                    while (startIdx < startOrder.length && generatedQuestions[startOrder[startIdx]].length === 0) {
+                        startIdx++;
+                    }
+                    
+                    if (startIdx < startOrder.length) {
+                        startType = startOrder[startIdx];
+                        setCurrentType(startType);
+                        setQIndex(0);
+                        setGameState('playing');
+                    } else {
+                        alert("No questions available for this selection!");
+                        setGameState('typeSelect');
+                    }
+                }, 1500); // 1.5s Fake Loading Delay
+            };
+
+            const handleHome = () => { setGameState('start'); setUserAnswers({}); };
+
+            const handleNextQuestion = (pointsOrCorrect) => {
+                const currentQ = activeQuestions[currentType][qIndex];
+                const points = (currentType === 'matching') ? pointsOrCorrect : (pointsOrCorrect ? 1 : 0);
+                setUserAnswers(prev => ({ ...prev, [currentQ.id]: points }));
+
+                const currentSectionQuestions = activeQuestions[currentType];
+                if (qIndex + 1 < currentSectionQuestions.length) {
+                    setQIndex(qIndex + 1);
+                } else {
+                    let nextTypeIdx = startOrder.indexOf(currentType) + 1;
+                    while (nextTypeIdx < startOrder.length && activeQuestions[startOrder[nextTypeIdx]].length === 0) nextTypeIdx++;
+                    if (nextTypeIdx < startOrder.length) {
+                        setCurrentType(startOrder[nextTypeIdx]);
+                        setQIndex(0);
+                    } else setGameState('result');
+                }
+            };
+
+            const handleBackQuestion = () => {
+                if (qIndex > 0) setQIndex(qIndex - 1);
+                else {
+                    const typeIdx = startOrder.indexOf(currentType);
+                    let prevTypeIdx = typeIdx - 1;
+                    while (prevTypeIdx >= 0 && activeQuestions[startOrder[prevTypeIdx]].length === 0) prevTypeIdx--;
+                    if (prevTypeIdx >= 0) {
+                        const prevType = startOrder[prevTypeIdx];
+                        setCurrentType(prevType);
+                        setQIndex(activeQuestions[prevType].length - 1);
+                    }
+                }
+            };
+
+            const canGoBack = () => {
+                const typeIdx = startOrder.indexOf(currentType);
+                let hasPrevType = false;
+                for(let i=0; i < typeIdx; i++) if (activeQuestions[startOrder[i]].length > 0) hasPrevType = true;
+                if (qIndex === 0 && !hasPrevType) return false;
+                return true;
+            };
+
+            const calculateDisplayScores = () => {
+                const s = { mc: 0, fillBlank: 0, matching: 0, short: 0 };
+                const sumType = (type) => { let sum = 0; activeQuestions[type].forEach(q => { if (userAnswers[q.id] !== undefined) sum += userAnswers[q.id]; }); return sum; };
+                s.mc = sumType('mc'); s.fillBlank = sumType('fillBlank'); s.matching = sumType('matching'); s.short = sumType('short');
+                return s;
+            };
+
+            const getDeviceClass = () => {
+                switch(deviceMode) {
+                    case 'mobile': return 'device-mobile my-8 shadow-2xl';
+                    case 'tablet': return 'device-tablet my-8 shadow-2xl';
+                    default: return 'device-computer min-h-screen';
+                }
+            };
+
+            // Counts for initial selection (Show full pool size)
+            const getQuestionCounts = () => ({
+                mc: topicQuestions.mc.length,
+                fillBlank: topicQuestions.fillBlank.length,
+                matching: topicQuestions.matching.length,
+                short: topicQuestions.short.length
+            });
+
+            return (
+                <div>
+                    {(gameState === 'playing' || gameState === 'result' || gameState === 'typeSelect') && <HomeButton onHome={handleHome} />}
+                    <DeviceControls mode={deviceMode} setMode={setDeviceMode} />
+                    
+                    <div className={`transition-all duration-300 ${getDeviceClass()} bg-[#f0f9ff]`}>
+                        {gameState === 'start' && <StartScreen onStart={handleTopicSelect} />}
+                        {gameState === 'loading' && <LoadingScreen />}
+                        {gameState === 'typeSelect' && <TypeSelectionScreen questionCounts={getQuestionCounts()} onSelectType={handleTypeSelect} onBack={() => setGameState('start')} />}
+                        {gameState === 'playing' && (
+                            <div className="container mx-auto px-4 py-6 pb-20 max-w-2xl">
+                                <div className="flex justify-between items-center mb-6 pl-10">
+                                    <div className="text-gray-500 font-bold uppercase tracking-wider text-xs md:text-sm">
+                                        {currentType === 'mc' && '選擇題 Multiple Choice'}
+                                        {currentType === 'fillBlank' && '填充題 Fill in Blanks'}
+                                        {currentType === 'matching' && '配對題 Matching'}
+                                        {currentType === 'short' && '短答題 Short Questions'}
+                                    </div>
+                                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">Q: {qIndex + 1} / {activeQuestions[currentType].length}</div>
+                                </div>
+                                <div className="min-h-[300px]">
+                                    {currentType === 'mc' && <MCSection questionData={activeQuestions.mc[qIndex]} onNext={handleNextQuestion} onBack={handleBackQuestion} canBack={canGoBack()} key={`mc-${activeQuestions.mc[qIndex].id}`} />}
+                                    {currentType === 'fillBlank' && <FillBlankSection questionData={activeQuestions.fillBlank[qIndex]} onNext={handleNextQuestion} onBack={handleBackQuestion} canBack={canGoBack()} key={`fb-${activeQuestions.fillBlank[qIndex].id}`} />}
+                                    {currentType === 'matching' && <MatchingSection questionData={activeQuestions.matching[qIndex]} onNext={handleNextQuestion} onBack={handleBackQuestion} canBack={canGoBack()} key={`match-${activeQuestions.matching[qIndex].id}`} />}
+                                    {currentType === 'short' && <ShortAnswerSection questionData={activeQuestions.short[qIndex]} onNext={handleNextQuestion} onBack={handleBackQuestion} canBack={canGoBack()} key={`short-${activeQuestions.short[qIndex].id}`} />}
+                                </div>
+                            </div>
+                        )}
+                        {gameState === 'result' && <ResultScreen scoreData={calculateDisplayScores()} totalQuestions={totalPossibleMarks} onRetry={() => setGameState('start')} />}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        function App() { return <Game />; }
+    </script>
+</body>
+</html>
