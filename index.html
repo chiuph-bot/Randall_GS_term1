@@ -49,19 +49,86 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- Question Database (Updated with AI Current Affairs) ---
+        // --- SVG Diagrams for System Photos ---
+        const UrinarySystemSVG = () => (
+            <svg viewBox="0 0 200 300" className="w-full h-64 mx-auto my-4 border bg-white rounded shadow-sm">
+                <text x="100" y="20" textAnchor="middle" fontSize="14" fontWeight="bold">泌尿系統 (Urinary System)</text>
+                {/* Kidneys */}
+                <path d="M60 80 Q40 100 60 130 Q80 110 60 80" fill="#e88" stroke="#333" strokeWidth="2" />
+                <text x="35" y="100" fontSize="12">A</text>
+                <path d="M140 80 Q160 100 140 130 Q120 110 140 80" fill="#e88" stroke="#333" strokeWidth="2" />
+                {/* Ureters */}
+                <path d="M65 120 Q70 180 90 220" fill="none" stroke="#dcb" strokeWidth="3" />
+                <text x="70" y="180" fontSize="12">B</text>
+                <path d="M135 120 Q130 180 110 220" fill="none" stroke="#dcb" strokeWidth="3" />
+                {/* Bladder */}
+                <path d="M80 220 Q100 260 120 220" fill="#fe9" stroke="#333" strokeWidth="2" />
+                <text x="130" y="230" fontSize="12">C</text>
+                {/* Urethra */}
+                <line x1="100" y1="240" x2="100" y2="260" stroke="#333" strokeWidth="3" />
+                <text x="110" y="260" fontSize="12">D</text>
+            </svg>
+        );
+
+        const NervousSystemSVG = () => (
+            <svg viewBox="0 0 200 300" className="w-full h-64 mx-auto my-4 border bg-white rounded shadow-sm">
+                <text x="100" y="20" textAnchor="middle" fontSize="14" fontWeight="bold">神經系統 (Nervous System)</text>
+                {/* Brain */}
+                <path d="M70 50 Q100 20 130 50 Q150 80 130 100 Q100 120 70 100 Q50 80 70 50" fill="#fca" stroke="#333" strokeWidth="2" />
+                <text x="150" y="60" fontSize="12">P (Brain)</text>
+                {/* Spinal Cord */}
+                <rect x="95" y="100" width="10" height="150" fill="#fdcb6e" stroke="#333" />
+                <text x="120" y="150" fontSize="12">Q (Spinal Cord)</text>
+                {/* Nerves */}
+                <path d="M95 120 L50 140" stroke="#888" strokeWidth="1" />
+                <path d="M105 130 L150 160" stroke="#888" strokeWidth="1" />
+                <path d="M95 180 L40 200" stroke="#888" strokeWidth="1" />
+                <text x="40" y="190" fontSize="12">R (Nerves)</text>
+            </svg>
+        );
+
+        // --- Question Database (Updated with Image Questions) ---
         const QUESTION_BANK = {
             mc: [
+                // Urinary System
                 { id: 'u1', topic: 'urinary', difficulty: 'medium', question: "哪一個器官負責過濾血液中的廢物和多餘水分？ (Which organ is responsible for filtering waste and excess water from the blood?)", options: ["心臟 (Heart)", "腎臟 (Kidney)", "肝臟 (Liver)", "膀胱 (Bladder)"], answer: 1, explanation: "解析：腎臟像過濾器，負責把血液中的廢物和多餘水分過濾出來，形成尿液。 (Explanation: The kidney acts like a filter, removing waste and excess water from the blood to form urine.)" },
                 { id: 'u2', topic: 'urinary', difficulty: 'medium', question: "尿液經輸尿管輸送到哪裡暫時儲存？ (Where is urine transported by the ureter for temporary storage?)", options: ["腎臟 (Kidney)", "尿道 (Urethra)", "膀胱 (Bladder)", "胃 (Stomach)"], answer: 2, explanation: "解析：膀胱負責暫時儲存尿液，直至有尿意排出。 (Explanation: The bladder temporarily stores urine until there is an urge to urinate.)" },
                 { id: 'u3', topic: 'urinary', difficulty: 'easy', question: "以下哪項不是身體排出水分的途徑？ (Which of the following is NOT a way the body excretes water?)", options: ["排汗 (Sweating)", "呼氣 (Exhaling)", "排尿 (Urination)", "消化 (Digestion)"], answer: 3, explanation: "解析：身體主要透過排汗、呼氣和排尿流失水分。 (Explanation: The body mainly loses water through sweating, exhaling, and urination.)" },
                 { id: 'u4', topic: 'urinary', difficulty: 'medium', question: "水是甚麼的主要成分，幫助運送養分？ (Water is the main component of what, helping to transport nutrients?)", options: ["骨骼 (Bones)", "血液 (Blood)", "肌肉 (Muscles)", "頭髮 (Hair)"], answer: 1, explanation: "解析：水是血液的主要成分，負責運送養分和氧氣到身體各部分。 (Explanation: Water is a major component of blood, responsible for transporting nutrients and oxygen to all parts of the body.)" },
                 { id: 'u5', topic: 'urinary', difficulty: 'hard', question: "為了保護泌尿系統，我們應該避免甚麼？ (To protect the urinary system, what should we avoid?)", options: ["多喝水 (Drinking plenty of water)", "多吃水果 (Eating plenty of fruits)", "經常忍尿 (Frequently holding urine)", "做運動 (Exercising)"], answer: 2, explanation: "解析：經常忍尿會令廢物積聚，容易引致細菌感染。 (Explanation: Frequently holding urine can cause waste accumulation and lead to bacterial infection.)" },
+                { id: 'u6', topic: 'urinary', difficulty: 'easy', question: "腎臟的外形像甚麼？ (What is the shape of the kidney like?)", options: ["腰果 (Cashew nut)", "蠶豆 (Broad bean)", "氣球 (Balloon)", "喉管 (Pipe)"], answer: 1, explanation: "解析：腎臟位於腰部脊骨兩旁，形狀像蠶豆。 (Explanation: The kidneys are located on both sides of the spine in the lower back and are shaped like broad beans.)" },
+                { id: 'u7', topic: 'urinary', difficulty: 'medium', question: "除了喝水，我們還可以透過甚麼補充水分？ (Besides drinking water, how else can we replenish water?)", options: ["吃薯片 (Eating potato chips)", "吃水果和蔬菜 (Eating fruits and vegetables)", "吃油炸食物 (Eating fried food)", "睡覺 (Sleeping)"], answer: 1, explanation: "解析：水果和蔬菜含有豐富水分，有助補充身體所需。 (Explanation: Fruits and vegetables contain plenty of water, helping to replenish bodily needs.)" },
+                { id: 'u8', topic: 'urinary', difficulty: 'hard', question: "如果腎臟功能受損，身體會出現甚麼問題？ (What problems will occur if kidney function is impaired?)", options: ["無法過濾廢物 (Unable to filter waste)", "無法呼吸 (Unable to breathe)", "無法思考 (Unable to think)", "無法行走 (Unable to walk)"], answer: 0, explanation: "解析：腎臟受損會導致廢物和毒素積聚在血液中，危害健康。 (Explanation: Kidney damage leads to the accumulation of waste and toxins in the blood, harming health.)" },
+                // Image Question - Urinary
+                { id: 'uImg1', topic: 'urinary', difficulty: 'easy', image: 'urinary', question: "參考上圖，部位 A 的名稱是甚麼？ (Refer to the diagram above. What is the name of part A?)", options: ["腎臟 (Kidney)", "輸尿管 (Ureter)", "膀胱 (Bladder)", "尿道 (Urethra)"], answer: 0, explanation: "解析：部位A是腎臟，負責製造尿液。 (Explanation: Part A is the Kidney, responsible for producing urine.)" },
+                { id: 'uImg2', topic: 'urinary', difficulty: 'medium', image: 'urinary', question: "參考上圖，部位 C 的功能是甚麼？ (Refer to the diagram above. What is the function of part C?)", options: ["製造尿液 (Produce urine)", "儲存尿液 (Store urine)", "輸送尿液 (Transport urine)", "排出尿液 (Excrete urine)"], answer: 1, explanation: "解析：部位C是膀胱，負責儲存尿液。 (Explanation: Part C is the Bladder, responsible for storing urine.)" },
+
+                // Nervous System
                 { id: 'n1', topic: 'nervous', difficulty: 'easy', question: "神經系統的總司令是甚麼？ (What is the commander-in-chief of the nervous system?)", options: ["心臟 (Heart)", "腦 (Brain)", "脊髓 (Spinal cord)", "神經 (Nerves)"], answer: 1, explanation: "解析：腦是神經系統的中樞，負責思考、記憶和發出指令。 (Explanation: The brain is the center of the nervous system, responsible for thinking, memory, and issuing commands.)" },
                 { id: 'n2', topic: 'nervous', difficulty: 'medium', question: "以下哪項屬於反射動作？ (Which of the following is a reflex action?)", options: ["寫字 (Writing)", "彈琴 (Playing piano)", "縮手-觸碰熱物 (Pulling hand back-touching hot object)", "跑步 (Running)"], answer: 2, explanation: "解析：縮手是為了保護身體的快速反應，不經大腦思考，由脊髓控制。 (Explanation: Pulling the hand back is a quick response to protect the body, controlled by the spinal cord without brain processing.)" },
+                { id: 'n3', topic: 'nervous', difficulty: 'medium', question: "感覺神經的主要功能是甚麼？ (What is the main function of sensory nerves?)", options: ["發出指令 (Sending commands)", "接收訊息 (Receiving information)", "製造血液 (Producing blood)", "消化食物 (Digesting food)"], answer: 1, explanation: "解析：感覺神經負責接收外界刺激（如熱、痛）並傳送到中樞神經。 (Explanation: Sensory nerves are responsible for receiving external stimuli (like heat, pain) and transmitting them to the central nervous system.)" },
+                { id: 'n4', topic: 'nervous', difficulty: 'medium', question: "怎樣做可以讓大腦休息？ (What can be done to let the brain rest?)", options: ["通宵打機 (Playing games all night)", "充足睡眠 (Sufficient sleep)", "喝咖啡 (Drinking coffee)", "劇烈運動 (Strenuous exercise)"], answer: 1, explanation: "解析：充足的睡眠是讓大腦休息和整理記憶的最佳方法。 (Explanation: Sufficient sleep is the best way for the brain to rest and organize memories.)" },
                 { id: 'n5', topic: 'nervous', difficulty: 'easy', question: "腦部受到甚麼保護？ (What protects the brain?)", options: ["頭骨 (Skull)", "肋骨 (Ribs)", "脊骨 (Spine)", "盆骨 (Pelvis)"], answer: 0, explanation: "解析：堅硬的頭骨包圍著腦部，提供保護。 (Explanation: The hard skull surrounds and protects the brain.)" },
+                { id: 'n6', topic: 'nervous', difficulty: 'hard', question: "酒精對神經系統有甚麼影響？ (What is the effect of alcohol on the nervous system?)", options: ["加快反應 (Speeding up reaction)", "減慢反應 (Slowing down reaction)", "增強記憶 (Enhancing memory)", "沒有影響 (No effect)"], answer: 1, explanation: "解析：酒精會麻醉腦部，令反應遲鈍，判斷力下降。 (Explanation: Alcohol numbs the brain, causing slow reactions and impaired judgment.)" },
+                { id: 'n7', topic: 'nervous', difficulty: 'hard', question: "隨意動作（如做功課）主要由哪部分控制？ (Voluntary actions, like doing homework, are mainly controlled by which part?)", options: ["脊髓 (Spinal cord)", "腦 (Brain)", "心臟 (Heart)", "胃 (Stomach)"], answer: 1, explanation: "解析：隨意動作需要經過思考，由腦部發出指令。 (Explanation: Voluntary actions require thinking and commands from the brain.)" },
+                // Image Question - Nervous
+                { id: 'nImg1', topic: 'nervous', difficulty: 'easy', image: 'nervous', question: "參考上圖，部位 P 是甚麼？ (Refer to the diagram above. What is part P?)", options: ["腦 (Brain)", "脊髓 (Spinal cord)", "神經 (Nerves)", "血管 (Blood vessel)"], answer: 0, explanation: "解析：P 是腦，位於頭顱內。 (Explanation: P is the Brain, located inside the skull.)" },
+                { id: 'nImg2', topic: 'nervous', difficulty: 'medium', image: 'nervous', question: "參考上圖，部位 Q 的主要功能之一是？ (Refer to the diagram above. What is one main function of part Q?)", options: ["思考 (Thinking)", "控制反射動作 (Controlling reflex actions)", "泵血 (Pumping blood)", "消化 (Digestion)"], answer: 1, explanation: "解析：Q 是脊髓，是反射動作的中樞。 (Explanation: Q is the Spinal Cord, the center for reflex actions.)" },
+
+                // Puberty Physiological
                 { id: 'p1', topic: 'puberty', difficulty: 'easy', question: "青春期一般在甚麼年齡階段？ (At what age stage does puberty generally occur?)", options: ["1-5歲 (1-5 years old)", "6-10歲 (6-10 years old)", "11-19歲 (11-19 years old)", "20-30歲 (20-30 years old)"], answer: 2, explanation: "解析：青春期是兒童過渡到成人的階段，約在11至19歲。 (Explanation: Puberty is the transition stage from childhood to adulthood, usually between 11 and 19 years old.)" },
                 { id: 'p2', topic: 'puberty', difficulty: 'medium', question: "男性青春期時，睾丸開始製造甚麼？ (What do the testes start producing during male puberty?)", options: ["卵子 (Eggs)", "精子 (Sperm)", "尿液 (Urine)", "血液 (Blood)"], answer: 1, explanation: "解析：精子是男性的生殖細胞，由睾丸製造。 (Explanation: Sperm are male reproductive cells produced by the testes.)" },
+                { id: 'p3', topic: 'puberty', difficulty: 'medium', question: "女性月經週期大約是多少天？ (Approximately how many days is the female menstrual cycle?)", options: ["7天 (7 days)", "14天 (14 days)", "28天 (28 days)", "60天 (60 days)"], answer: 2, explanation: "解析：月經週期平均約為28天，但因人而異。 (Explanation: The average menstrual cycle is about 28 days, but varies by individual.)" },
+                { id: 'p4', topic: 'puberty', difficulty: 'hard', question: "以下哪項是影響發育的因素？ (Which of the following factors affects development?)", options: ["遺傳 (Heredity)", "飲食 (Diet)", "運動 (Exercise)", "以上皆是 (All of the above)"], answer: 3, explanation: "解析：發育受先天遺傳及後天飲食、運動、睡眠等因素影響。 (Explanation: Development is affected by heredity, diet, exercise, and sleep.)" },
+                { id: 'p5', topic: 'puberty', difficulty: 'medium', question: "夢遺是甚麼？ (What is a wet dream?)", options: ["病態 (Pathological)", "不正常的 (Abnormal)", "自然的生理現象 (Natural physiological phenomenon)", "受傷表現 (Sign of injury)"], answer: 2, explanation: "解析：夢遺是男性青春期常見的自然生理現象，表示生殖系統趨向成熟。 (Explanation: Wet dreams are a common natural phenomenon in male puberty, indicating reproductive maturity.)" },
+                { id: 'p6', topic: 'puberty', difficulty: 'medium', question: "長青春痘（暗瘡）主要是因為？ (What is the main reason for acne?)", options: ["油脂分泌旺盛 (Excessive oil secretion)", "喝太多水 (Drinking too much water)", "讀書太勤力 (Studying too hard)", "長得太高 (Growing too tall)"], answer: 0, explanation: "解析：青春期荷爾蒙分泌增加，令油脂分泌旺盛，容易堵塞毛孔形成暗瘡。 (Explanation: Increased hormones during puberty cause excessive oil secretion, blocking pores and causing acne.)" },
+                { id: 'p7', topic: 'puberty', difficulty: 'medium', question: "男性聲音變低沉（喉核凸出）是因為甚麼發育？ (Male voice deepening/Adam's apple prominence is due to the development of what?)", options: ["肺部 (Lungs)", "喉部 (Larynx)", "口腔 (Mouth)", "鼻子 (Nose)"], answer: 1, explanation: "解析：喉部軟骨發育變大，導致聲帶變長變厚，聲音因此變低沉。 (Explanation: The laryngeal cartilage grows, thickening the vocal cords and deepening the voice.)" },
+
+                // Puberty Psychological
+                { id: 'ps1', topic: 'puberty', difficulty: 'medium', question: "青春期青少年為什麼會模仿偶像？ (Why do adolescents imitate idols during puberty?)", options: ["尋求認同 (Seeking approval)", "為了賺錢 (To make money)", "被強迫 (Forced)", "無聊 (Boredom)"], answer: 0, explanation: "解析：青少年尋求自我形象和朋輩認同，容易模仿偶像或朋友。 (Explanation: Adolescents seek self-image and peer approval, often imitating idols or friends.)" },
+                { id: 'ps2', topic: 'puberty', difficulty: 'hard', question: "面對父母的囉嗦，青少年應該？ (How should adolescents respond to parents' nagging?)", options: ["離家出走 (Run away from home)", "大發脾氣 (Lose temper)", "冷靜溝通 (Communicate calmly)", "充耳不聞 (Turn a deaf ear)"], answer: 2, explanation: "解析：良好的溝通能減少誤會，青少年應學習表達感受並體諒父母。 (Explanation: Good communication reduces misunderstandings; adolescents should express feelings and understand parents.)" },
+                { id: 'ps3', topic: 'puberty', difficulty: 'hard', question: "與異性相處時，我們應該？ (When interacting with the opposite sex, we should?)", options: ["保持距離並互相尊重 (Keep distance and respect each other)", "只和同性玩 (Play only with same sex)", "取笑對方 (Tease each other)", "完全不說話 (Not talk at all)"], answer: 0, explanation: "解析：青春期對異性好奇是正常的，應以大方、尊重的態度相處。 (Explanation: Curiosity about the opposite sex is normal; interactions should be respectful.)" },
+                { id: 'ps4', topic: 'puberty', difficulty: 'hard', question: "當朋友邀請你嘗試吸煙時，你應該？ (When a friend invites you to try smoking, you should?)", options: ["試一口 (Try a puff)", "堅決拒絕 (Firmly refuse)", "猶豫不決 (Hesitate)", "收下煙包 (Accept the cigarette pack)"], answer: 1, explanation: "解析：吸煙危害健康，面對不良誘惑要堅決說「不」。 (Explanation: Smoking harms health; firmly say 'no' to bad temptations.)" }
             ],
             fillBlank: [
                 { id: 'fb1', topic: 'urinary', difficulty: 'medium', question: "腎臟負責過濾血液，形成________。 (The kidneys are responsible for filtering blood to form ________.)", options: ["汗水 (Sweat)", "尿液 (Urine)", "口水 (Saliva)"], answer: "尿液 (Urine)", explanation: "解析：腎臟的功能是過濾血液中的廢物，形成尿液。 (Explanation: The kidney's function is to filter waste from blood to form urine.)" },
@@ -343,6 +410,10 @@
             return (
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 fade-in">
                     <h3 className="text-xl font-bold text-gray-800 mb-6 leading-relaxed"><span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded align-middle">選擇題 (MC)</span>{questionData.question}</h3>
+                    
+                    {questionData.image === 'urinary' && <UrinarySystemSVG />}
+                    {questionData.image === 'nervous' && <NervousSystemSVG />}
+
                     <div className="grid gap-3">
                         {questionData.options.map((opt, idx) => {
                             let btnClass = "w-full text-left p-4 rounded-lg border-2 transition-all font-medium ";
